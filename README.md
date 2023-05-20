@@ -7,6 +7,7 @@ Task: To create a server monitoring system using AWS Lambda, DynamoDB, Eventbrid
 
 ### STEPS:
 
-1. Upload /cloudFormationFile/iamRole.json to cloud formation AWS using upload template method and give it some name such as: 'server-ns-iam-role'
-2. Upload /cloudFormationFile/lambdas.json to cloud formation AWS using upload template method and give it some name such as: 'server-ns-lambdas'
-3. Upload /cloudFormationFile/dynamodb.json to cloud formation AWS using upload template method and give it some name such as: 'server-ns-dynamodb'
+1. Upload /cloudFormationFile/iamRole.json to cloud formation AWS using upload template method and give it some name such as: 'server-ns-iam-role' and wait for it to deploy properly.
+2. Upload /cloudFormationFile/lambdas.json to cloud formation AWS using upload template method and give it some name such as: 'server-ns-lambdas' and wait for it to deploy properly.
+3. Upload /cloudFormationFile/dynamodb.json to cloud formation AWS using upload template method and give it some name such as: 'server-ns-dynamodb' and wait for it to deploy properly.
+4. 
