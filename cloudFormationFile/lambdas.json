@@ -1,0 +1,40 @@
+{
+  "Resources": {
+    "lambdaServerNotifyServerStatus": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": "lambda-server-notify-server-status",
+        "Role": { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:role/role-server-notification-sys" },
+        "Runtime": "python3.7",
+        "Handler": "index.my_handler",
+        "Code": {
+          "ZipFile": "import json\nimport boto3\n\ndef lambda_handler(event, context):\n    client = boto3.client('dynamodb')\n    items = client.scan(TableName='table_assignment_hire')\n    # Adding responseBody as a tuple (score, item) so that sorting can be carried out using score.\n    responseBody=[]\n    for item in items['Items']:\n        server_status = item['server_status']['S']\n        if server_status == 'inactive':\n    \t    responseBody.append(item)\n    \n    \n    if len(responseBody) != 0:\n        sns_topic_arn = \"arn:aws:sns:eu-north-1:459756656750:hire_test_topic\"\n        message = \"Servers which are in alarm: \\n {}\".format(responseBody)\n        subject = \"Servers in ALARM!!\"\n        send_sns(message, subject, sns_topic_arn)\n        \n    return {'statusCode': 200}\n\n\n\ndef send_sns(message, subject, sns_topic_arn):\n    try:\n        client = boto3.client(\"sns\")\n        result = client.publish(TopicArn=sns_topic_arn, Message=message, Subject=subject)\n        if result['ResponseMetadata']['HTTPStatusCode'] == 200:\n            print(result)\n            print(\"Notification send successfully..!!!\")\n            return True\n    except Exception as e:\n        print(\"Error occured while publish notifications and error is : \", e)\n        return True\n"
+        }
+      }
+    },
+    "lambdaGetServerDetails": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": "lambda-get-server-details",
+        "Role": { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:role/role-server-notification-sys" },
+        "Runtime": "python3.7",
+        "Handler": "index.my_handler",
+        "Code": {
+          "ZipFile": "import json\nimport boto3\n\nclient = boto3.client('dynamodb')\n\ndef lambda_handler(event, context):\n\titems = client.scan(TableName='table_assignment_hire')\n\t# Adding responseBody as a tuple (score, item) so that sorting can be carried out using score.\n\tresponseBody=[]\n\tfor item in items['Items']:\n\t\tresponseBody.append((int(item['server_score']['S']),item))\n\t\n\t# Sorting in descending order\n\tresponseBody.sort(reverse=True)\n\t\n\t#Preparing response body by retrieving item after removal of score we used for sorting,\n\tdata = []\n\tfor item in responseBody:\n\t\tdata.append(item[1])\n\tresponse = {\n\t  'statusCode': 200,\n\t  'body': json.dumps(data),\n\t  'headers': {\n\t    'Content-Type': 'application/json',\n\t  }\n\t}\n\n\treturn response"
+        }
+      }
+    },
+    "lambdaPostServerDetails": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": "lambda-post-server-details",
+        "Role": { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:role/role-server-notification-sys" },
+        "Runtime": "python3.7",
+        "Handler": "index.my_handler",
+        "Code": {
+          "ZipFile": "import json\nimport boto3\n\nclient = boto3.client('dynamodb')\n\ndef lambda_handler(event, context):\n\t# Adding item came from the post request\n\tprint(\"Event::\")\n\tprint(event)\n\tprint(\"Event::\")\n\t\n\tbody = json.loads(event['body'])\n\titem={}\n\tif('server_status' in body and 'server_score' in body and 'server_name' in body and 'server_ip' in body):\n\t\titem = {\n\t\t\t'server_status': { 'S': body['server_status'] },\n\t\t\t'server_score': { 'S': body['server_score'] },\n\t\t\t'server_name': { 'S': body['server_name'] },\n\t\t\t'server_ip': { 'S': body['server_ip'] }\n\t\t}\n\t\tclient.put_item(TableName='table_assignment_hire',  Item=item)\n\t\tprint('Item has been added to the table using post method')\n\t\n\titems = client.scan(TableName='table_assignment_hire')\n\t# Adding responseBody as a tuple (score, item) so that sorting can be carried out using score.\n\tresponseBody=[]\n\tfor item in items['Items']:\n\t\tresponseBody.append((int(item['server_score']['S']),item))\n\t\n\t# Sorting in descending order\n\tresponseBody.sort(reverse=True)\n\t\n\t#Preparing response body by retrieving item after removal of score we used for sorting,\n\tdata = []\n\tfor item in responseBody:\n\t\tdata.append(item[1])\n\tresponse = {\n\t  'statusCode': 200,\n\t  'body': json.dumps(data),\n\t  'headers': {\n\t    'Content-Type': 'application/json',\n\t  }\n\t}\n\t\n\treturn response"
+        }
+      }
+    }
+  }
+}
