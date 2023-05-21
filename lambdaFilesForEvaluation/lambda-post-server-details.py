@@ -18,10 +18,10 @@ def lambda_handler(event, context):
             'server_name': { 'S': body['server_name'] },
             'server_ip': { 'S': body['server_ip'] }
         }
-        client.put_item(TableName='table_assignment_hire',  Item=item)
+        client.put_item(TableName='dynamo_table_server_status',  Item=item)
         print('Item has been added to the table using post method')
 
-    items = client.scan(TableName='table_assignment_hire')
+    items = client.scan(TableName='dynamo_table_server_status')
     # Adding responseBody as a tuple (score, item) so that sorting can be carried out using score.
     responseBody=[]
     for item in items['Items']:

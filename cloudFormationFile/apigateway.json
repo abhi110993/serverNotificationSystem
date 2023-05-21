@@ -1,0 +1,93 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS CloudFormation sample template that contains a single Lambda function behind an API Gateway",
+
+  "Resources": {
+
+    "ServerNotificationSystemApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": "Server NS API",
+        "Description": "API used for ServerNotificationSystem requests",
+        "FailOnWarnings": true
+      }
+    },
+
+    "ServerNotificationSystemApiStage": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "DeploymentId": {"Ref": "ApiDeployment"},
+        "MethodSettings": [{
+          "DataTraceEnabled": true,
+          "HttpMethod": "*",
+          "LoggingLevel": "INFO",
+          "ResourcePath": "/*"
+        }],
+        "RestApiId": {"Ref": "ServerNotificationSystemApi"},
+        "StageName": "LATEST"
+      }
+    },
+
+    "ApiDeployment": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "DependsOn": ["ServerNotificationSystemRequestGET", "ServerNotificationSystemRequestPOST"],
+      "Properties": {
+        "RestApiId": {"Ref": "ServerNotificationSystemApi"},
+        "StageName": "dev"
+      }
+    },
+
+    "ServerNotificationSystemResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "RestApiId": {"Ref": "ServerNotificationSystemApi"},
+        "ParentId": {"Fn::GetAtt": ["ServerNotificationSystemApi", "RootResourceId"]},
+        "PathPart": "serverNotificationSystem"
+      }
+    },
+
+    "ServerNotificationSystemRequestGET": {
+      "Type": "AWS::ApiGateway::Method",
+      "Role": { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:role/role-server-notification-sys" },
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "Type": "AWS",
+          "IntegrationHttpMethod": "POST",
+          "Uri": "arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:459756656750:function:lambda-get-server-details/invocations"
+        },
+        "RequestParameters": {
+          "method.request.querystring.name": false
+        },
+        "ResourceId": {"Ref": "ServerNotificationSystemResource"},
+        "RestApiId": {"Ref": "ServerNotificationSystemApi"},
+        "MethodResponses": [{
+          "StatusCode": 200
+        }]
+      }
+    },
+
+    "ServerNotificationSystemRequestPOST": {
+      "Type": "AWS::ApiGateway::Method",
+      "Role": { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:role/role-server-notification-sys" },
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "Type": "AWS",
+          "IntegrationHttpMethod": "POST",
+          "Uri": "arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:459756656750:function:lambda-post-server-details/invocations"
+        },
+        "RequestParameters": {
+          "method.request.querystring.name": false
+        },
+        "ResourceId": {"Ref": "ServerNotificationSystemResource"},
+        "RestApiId": {"Ref": "ServerNotificationSystemApi"},
+        "MethodResponses": [{
+          "StatusCode": 200
+        }]
+      }
+    }
+  }
+}

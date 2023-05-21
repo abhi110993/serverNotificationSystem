@@ -4,7 +4,7 @@ import boto3
 client = boto3.client('dynamodb')
 
 def lambda_handler(event, context):
-    items = client.scan(TableName='table_assignment_hire')
+    items = client.scan(TableName='dynamo_table_server_status')
     # Adding responseBody as a tuple (score, item) so that sorting can be carried out using score.
     responseBody=[]
     for item in items['Items']:

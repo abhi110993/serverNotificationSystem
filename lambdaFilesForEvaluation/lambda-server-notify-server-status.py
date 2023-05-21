@@ -3,7 +3,7 @@ import boto3
 
 def lambda_handler(event, context):
     client = boto3.client('dynamodb')
-    items = client.scan(TableName='table_assignment_hire')
+    items = client.scan(TableName='dynamo_table_server_status')
     # Adding responseBody as a tuple (score, item) so that sorting can be carried out using score.
     responseBody=[]
     for item in items['Items']:
@@ -13,7 +13,7 @@ def lambda_handler(event, context):
 
 
     if len(responseBody) != 0:
-        sns_topic_arn = "arn:aws:sns:eu-north-1:459756656750:hire_test_topic"
+        sns_topic_arn = "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:hire_test_topic"
         message = "Servers which are in alarm: \n {}".format(responseBody)
         subject = "Servers in ALARM!!"
         send_sns(message, subject, sns_topic_arn)
